@@ -560,12 +560,11 @@ mleg = function(size=0.5,height=0.5,width=0.5,title=6,text=6){
 #' }
 #' @return ggplot   
 #' @export
-<<<<<<< HEAD
-ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ftrg=c("none","msy","f0.1"),
-                         stk_name = NULL){
-=======
-ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, ncol=NULL, colours=NULL, Ftrg=c("none","msy","f0.1"), stk_name = NULL){
->>>>>>> 49bc817cc89b24cf91793b5d4e71919967e96955
+
+ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, len50gear=NULL, 
+                         vBPar, panels=NULL, ncol=NULL, colours=NULL, 
+                         Ftrg=c("none","msy","f0.1"), stk_name = NULL){
+
   # Colour function
   if(is.null(colours)){colf = r4col} else {colf = colours}
   if(is.null(panels)) panels=1:4
@@ -573,7 +572,12 @@ ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, 
     if(length(panels)%in%c(1,3)){ncol=length(panels)} else {ncol=2}
   }
   # instead of observed we choose the brp that corresponds to fitted s50
-    obsS <- names(brps[-1])[an(names(brps)) >= round(an(fit$par[1]),1)][2]
+    obsS <- names(brps)[an(names(brps)) >= round(an(fit$par[1]),1)][2]
+    
+    # add an extra point in the graph of isopleths (by adding an observed L50 of population
+    # in the function)
+    age50gear <- 3# len to age conversionf(len50gear)
+    obsL50 <- names(brps)[an(names(brps)) >= round(age50gear,1)][2]
   
   # Check range 
   # WARNING: Also include na.rm = TRUE in order to get the limits (lim) in case the fmle did not converged all the times
@@ -610,6 +614,12 @@ ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, 
   # S50obs = s50(Sa)
   S50obs = an(fit$par[1])
   S50lobs <- vonB(S50obs, vBPar)
+  
+  # Adding an extra point to the graph providing len50gear
+  Flen50gear = an(refpts(brps[[obsL50]])["Fref","harvest"])
+  Ylen50gear = an(refpts(brps[[obsL50]])["Fref","yield"])
+  Slen50gear = an(refpts(brps[[obsL50]])["Fref","ssb"])
+  ## ================================================== ##
   isodat$Fo = c(obs$harvest,rep(NA,nrow(isodat)-nrow(obs)))
   isodat$Yo = c(obs$yield,rep(NA,nrow(isodat)-nrow(obs)))/max(isodat$yield)
   isodat$So = c(obs$ssb,rep(NA,nrow(isodat)-nrow(obs)))/max(isodat$ssb)
@@ -796,6 +806,12 @@ if (ageBased) {
     } else {
       P4= P4+geom_point(data=ftrg,aes(x=ftrg,y=s50l),shape = 21, colour = "black",size=1.1, fill = "white")
     }
+  }
+  
+  ## Adding the extra point to the graph
+  if(!is.null(len50gear)){
+    P3 = P3 + geom_point(aes(x = Flen50gear, y = len50gear), shape = 8, size = 1.1)
+    P4 = P4 + geom_point(aes(x = Flen50gear, y = len50gear), shape = 8, size = 1.1)
   }
   plots <- list(P1=P1,P2=P2,P3=P3,P4=P4)
   
